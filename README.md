@@ -23,7 +23,7 @@ rosrun path_tracking pathFollowing
 
  //melodic的雷达无效，但noetic可以，gazebo9的问题？
  
- osqp求解器安装后将.so文件拷贝到链接库
+ //osqp求解器安装后将.so文件拷贝到链接库
  ```
 
 

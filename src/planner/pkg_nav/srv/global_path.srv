@@ -1,0 +1,10 @@
+# 客户端请求时发送的两个数字
+# Define the goal
+int32 num # cyb-test  累加
+
+geometry_msgs/PoseStamped start_pose
+geometry_msgs/PoseStamped goal_pose
+---
+# 服务器响应发送的数据
+int32 sum 
+nav_msgs/Path global_path  

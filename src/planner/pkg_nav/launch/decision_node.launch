@@ -1,0 +1,19 @@
+<launch>
+   <!-- AStar,  //0
+        Line,   //1
+        Square, //2
+        Circle, //3
+        CircleDouble  //4 
+        CircleS  //5 
+        SpiralLine //6-->
+     <remap from="/ow/odometry" to="/odom"/>
+    <param name="pathShape" value="1"/> <!-- default = 0-->
+    <param name="distCheckLocalStartToGoal" value="60"/> <!-- default = 10 float--> 
+    <param name="indexOffsetLocalGoalPose" value="100"/> <!-- default = 10 int >0 -->
+    <param name="isTestLine" value="0"/> <!-- default = 0  //0 1 -->
+    <node pkg="pkg_nav" name="decision_node" type="decision_node" output = "screen">
+     <!-- <node pkg="pkg_nav" name="decision_node" type="decision_node"> -->
+    </node>
+
+</launch>
+

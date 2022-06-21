@@ -1,0 +1,19 @@
+<?xml version='1.0'?>
+<sdf version='1.6'>
+  <model name='mode_test'>
+    <link name='link_0'>
+      <pose>0 0 0 0 0 0</pose>
+      <static>true</static>
+      <gravity> false </gravity>
+      <visual name='visual'>
+        <geometry>
+          <mesh>
+            <uri>file://mode_test/test7.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>  
+    </link>
+      
+  </model>
+</sdf>

@@ -1,0 +1,11 @@
+<launch>
+
+    <arg name="local_map_topic" default="/ow/local_map"/>
+    <remap from="/map" to="/$(arg local_map_topic)"/>
+    <!--load global map -->
+    <arg name="local_map_path" default="local_map.yaml" />
+    <node pkg="map_server" name="map_server" type="map_server" args="$(find pkg_nav)/map/$(arg local_map_path)"/>
+    <node pkg="rviz" name="rviz" type="rviz" args="-d $(find pkg_nav)/config/rviz/nav_rviz.rviz"/>
+
+
+</launch>

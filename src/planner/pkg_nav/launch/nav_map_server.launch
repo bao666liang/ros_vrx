@@ -1,0 +1,25 @@
+<launch>
+
+    <arg name="global_map_topic" default="/ow/global_map"/> 
+    <!-- <arg name="global_map_topic" default="/ow/global_map_csh"/> -->
+
+    <remap from="/map" to="/$(arg global_map_topic)"/>
+
+    <!--load global map -->
+    <!-- <arg name="global_map_path" default="global_map.yaml" /> -->
+    <!-- <arg name="global_map" default="global_map_csf.yaml" /> -->
+    <arg name="global_map" default="local_map.yaml" />
+    <!-- <arg name="global_map" default="vrx.yaml" /> -->
+    <node pkg="map_server" name="map_global" type="map_server" args="$(find pkg_nav)/map/$(arg global_map)"/>
+
+    <!-- <node pkg="pkg_nav" name="global_map_pub_node" type="global_map_pub_node.py" output = "screen"/> -->
+    <!-- <node pkg="pkg_nav" name="map_process_node" type="map_process_node" output = "screen"/> -->
+    <!-- launch local map publisher node -->
+    <!-- <node pkg="pkg_nav" name="local_map_puath_server" type="local_path_server.py" output = "screen"/> -->
+
+    <node pkg="pkg_nav" name="local_map_pub_node" type="local_map_pub_node.py" output = "screen"/> 
+
+    <node pkg="rviz" name="rviz" type="rviz" args="-d $(find pkg_nav)/config/rviz/nav_rviz.rviz"/>
+
+
+</launch>

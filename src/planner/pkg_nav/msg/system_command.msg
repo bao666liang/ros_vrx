@@ -1,0 +1,14 @@
+# Define the goal
+# nav_msgs/Path local_path  
+int8 num  #test -cyb
+int8 runCommand
+
+# ---
+# Define the result
+int8  runResult  # #  -1：处理失败  0 : 未处理     1：正在处理   2：处理完成  
+int32 result #test -cyb
+
+# ---
+# Define a feedback message 
+float64 percent_complete  # [0-100]   处理进度 
+int8    runState  #  -1：处理失败  0 : 未处理     1：正在处理   2：处理完成 

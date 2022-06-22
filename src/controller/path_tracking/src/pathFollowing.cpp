@@ -1,4 +1,5 @@
 #include <cmath>
+#include <time.h>
 #include <gazebo_msgs/ModelStates.h>
 #include <ros/ros.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
@@ -11,12 +12,13 @@
 #include"PID_Controller.hpp"
 
 
-std_msgs::Bool Move_flag;  
+std_msgs::Bool Move_flag;   
 nav_msgs::Odometry g_Odometry;
 nav_msgs::Path loaclPath;  
 float base_link_x,base_link_y,base_link_z;
 float theta; 
 float PrepointAngle;
+
 
 
 void caculateMoveCmd(); 
@@ -32,7 +34,9 @@ float Pid_Control(float LosAngle,float theta)
 {
     float  Err = (LosAngle - theta);
     static float ErrRate = 0;
+    static float ErrInt = 0;
     static float ErrLastTime = 0;
+    // 保证角度在[-180，180]  
     if(Err< -180)
     {
         Err = Err + 360;
@@ -44,11 +48,27 @@ float Pid_Control(float LosAngle,float theta)
 
     if(count%10 == 0)
     {       
-	    ErrRate = (Err - ErrLastTime)*5;
-	    ErrLastTime = Err;
+	    ErrRate = (Err - ErrLastTime);
+        ErrInt = (Err + ErrInt);
+	    ErrLastTime = Err; //两次采样时间间隔为count循环十一次的时间
     }
     count++;
-    float Angle =-(0.035*Err+0.023*ErrRate);
+    //误差要取负号   
+    // float Angle  = -(0.03*Err+ 0.00001*ErrInt + 30*ErrRate);
+    float Angle  = -(0.03*Err + 0.000001*ErrInt );
+
+      /*                         常用口诀
+            参数整定找最佳，从小到大顺序查
+            先是比例后积分，最后再把微分加
+            曲线振荡很频繁，比例度盘要放大
+            曲线漂浮绕大湾，比例度盘往小扳
+            曲线偏离回复慢，积分时间(Ti)往下降  系数为1/Ti
+            曲线波动周期长，积分时间再加长
+            曲线振荡频率快，先把微分降下来
+            动差大来波动慢。微分时间应加长
+            理想曲线两个波，前高后低4比1
+            一看二调多分析，调节质量不会低      
+    */
     return Angle;
 }
 
@@ -65,7 +85,7 @@ void simulationCmdPub(ros::Publisher pub,float cmdangle)
         twist.linear.x = 0;
     }
 
-    twist.angular.z = cmdangle;    
+    twist.angular.z = cmdangle;    //角度控制量在  [ -0.5，0.5  ]
     if(twist.angular.z>0.5)
     {
         twist.angular.z = 0.5;
@@ -74,7 +94,7 @@ void simulationCmdPub(ros::Publisher pub,float cmdangle)
     {
         twist.angular.z = -0.5;
     }   
-    ROS_INFO("发布控制指令");
+    // ROS_INFO("发布控制指令");
     pub.publish(twist);
 }
 
@@ -95,6 +115,20 @@ void pathCallback(const nav_msgs::Path &path)
 {
     loaclPath = path;
      int pathLength = loaclPath.poses.size();
+    /*
+    nav_msgs/Path.msg消息格式：
+    Header header
+         uint32 seq
+         time stamp
+         string frame_id
+     geometry_msgs/PoseStamped[] poses
+          geometry_msgs/Pose pose 
+                float64 x
+                float64 y
+                float64 z
+                float64 w
+    */
+
     ROS_INFO("接收到局部路径，长度为%d",pathLength);
     Move_flag.data = true;
 }
@@ -117,10 +151,10 @@ float caculateTheta()
     quat.setY(g_Odometry.pose.pose.orientation.y);
     quat.setZ(g_Odometry.pose.pose.orientation.z);
     double roll, pitch, yaw;
-    tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
-    float m_theta = (yaw/3.1415926)*180; 
+    tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);//四元数转rpy
+    float m_theta = (yaw/3.1415926)*180; //弧度转角度
     // ROS_INFO("m_theta = %f",m_theta);
-    return m_theta;
+    return m_theta;//yaw
 }
 
 
@@ -136,7 +170,12 @@ float ChangeAngleCal(float x ,float y,int pathLength)
     int MinIndex = 0;           //最小距离的点的序号
     float xx;
     float yy;
-//////////////////////////计算规划轨迹上离车辆当前位置最近的点和距离///////////////////
+/*计算规划轨迹上离车辆当前位置最近的点和距离
+     垂线最近 即求ye    
+
+     随着船不断靠近路径，ye会逐渐减小但detla不变，
+     所以期望航向角会收敛至0跟踪上路径，船的运动轨迹为曲线
+*/
     for(int i = 0;i < pathLength - 5;i++)
     {
         xx = loaclPath.poses[i].pose.position.x;
@@ -144,12 +183,12 @@ float ChangeAngleCal(float x ,float y,int pathLength)
         Length = pow((x - xx)*(x - xx) + (y - yy)*(y - yy),0.5);
         if(Length < MinLength)
         {
-            MinIndex = i;
-            MinLength = Length;
+            MinIndex = i;//船与路径垂点的索引
+            MinLength = Length;//ye
         }
     }
-    int predictIndex = 0;
-    float sundistance = 0;
+    int predictIndex = 0;//前视点的索引
+    float sundistance = 0;//前视距离detla  这里用的基本los是不变的
     for(int j= MinIndex;j < pathLength - 3;j++)
     {
         float x1,x2,y1,y2;
@@ -169,20 +208,25 @@ float ChangeAngleCal(float x ,float y,int pathLength)
     m_Vector.x = loaclPath.poses[predictIndex].pose.position.x - x;
     m_Vector.y = loaclPath.poses[predictIndex].pose.position.y - y;
     float angle;
+    /*
+    atan2()的值域是[-pi, pi]  值为弧度。也正因为atan2()需要确定目标角的象限，所以atan2的参数是以(y,x)的方式指定，
+    因此atan2(y,x)与atan2(-y,-x)所给出的结果是不一样的，虽然(y/x) = ((-y)/(-x))  csdn收藏
+    这里世界坐标在地图左下角      这里竖轴为y轴!!!!!!
+    */
     angle = atan2(m_Vector.y,m_Vector.x);
     angle = (angle/3.1415926)*180;
-    return angle;
+    return angle;//期望航向角
 }
 
 
 void caculateMoveCmd()     
 {
-    if(Move_flag.data)
+    if(Move_flag.data)//接受到路径信息后才开始计算和控制
     {
         int pathLength = loaclPath.poses.size();
         theta = caculateTheta(); 
-        PrepointAngle = ChangeAngleCal(base_link_x ,base_link_y,pathLength) ;
-        float Angle = Pid_Control(PrepointAngle,theta); 
+        PrepointAngle = ChangeAngleCal(base_link_x ,base_link_y,pathLength) ;//LOS输出期望航向角
+        float Angle = Pid_Control(PrepointAngle,theta); //PID输出角度控制量
         // geometry_msgs::Twist twist;
         // twist.angular.z = Angle;
         // twist.linear.x = 1;
@@ -200,7 +244,7 @@ int main(int argc, char *argv[])
     ros::NodeHandle node_handle;
     ros::Subscriber odom_sub = node_handle.subscribe("odom", 10, odomCallback);  //订阅VCU反馈的车辆状态
     ros::Subscriber localPath_sub = node_handle.subscribe("/ow/local_path", 10, pathCallback);  //接收规划节点的局部路劲信息
-    ThrustAngleCmd_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel",10, true);  
+    ThrustAngleCmd_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel",10, true);  //将计算好的控制量发布
     ros::Rate loop_rate(50);
     while (ros::ok())
     {

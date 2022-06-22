@@ -31,7 +31,7 @@
   <model name='ocean_waves'>
     <static>true</static>
     <plugin name="wavefield_plugin" filename="libWavefieldModelPlugin.so">
-      <static>false</static>
+      <static>true</static>
       <update_rate>30</update_rate>
       <size>1000 1000</size>
       <cell_count>50 50</cell_count>

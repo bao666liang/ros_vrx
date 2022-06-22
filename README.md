@@ -1,5 +1,5 @@
-# ros_vrx_path_follow
-基于ros的无人艇路径跟踪
+# ros_vrx
+
 ```
 sudo apt insatll  ros-melodic-robot-localization
 

@@ -1,5 +1,8 @@
 #include <cmath>
 #include <time.h>
+#include <iostream>
+#include <string>
+#include <stdio.h> 
 #include <gazebo_msgs/ModelStates.h>
 #include <ros/ros.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
@@ -55,7 +58,7 @@ float Pid_Control(float LosAngle,float theta)
     count++;
     //误差要取负号   
     // float Angle  = -(0.03*Err+ 0.00001*ErrInt + 30*ErrRate);
-    float Angle  = -(0.03*Err + 0.000001*ErrInt );
+    float Angle  = -(0.05*Err + 0.000001*ErrInt );
 
       /*                         常用口诀
             参数整定找最佳，从小到大顺序查
@@ -85,15 +88,15 @@ void simulationCmdPub(ros::Publisher pub,float cmdangle)
         twist.linear.x = 0;
     }
 
-    twist.angular.z = cmdangle;    //角度控制量在  [ -0.5，0.5  ]
-    if(twist.angular.z>0.5)
-    {
-        twist.angular.z = 0.5;
-    }   
-    if(twist.angular.z < -0.5)
-    {
-        twist.angular.z = -0.5;
-    }   
+    twist.angular.z = cmdangle;    //角度控制量默认截取在  [ -pi，pi  ] 弧度制
+    // if(twist.angular.z>0.5)
+    // {
+    //     twist.angular.z = 0.5;
+    // }   
+    // if(twist.angular.z < -0.5)
+    // {
+    //     twist.angular.z = -0.5;
+    // }   
     // ROS_INFO("发布控制指令");
     pub.publish(twist);
 }
@@ -227,6 +230,7 @@ void caculateMoveCmd()
         theta = caculateTheta(); 
         PrepointAngle = ChangeAngleCal(base_link_x ,base_link_y,pathLength) ;//LOS输出期望航向角
         float Angle = Pid_Control(PrepointAngle,theta); //PID输出角度控制量
+        printf("角度控制量%2f",Angle);
         // geometry_msgs::Twist twist;
         // twist.angular.z = Angle;
         // twist.linear.x = 1;

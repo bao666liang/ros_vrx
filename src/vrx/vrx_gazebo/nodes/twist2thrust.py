@@ -1,5 +1,7 @@
 #!/usr/bin/env python
+#coding=utf-8
 # license removed for brevity
+
 
 import sys
 import rospy
@@ -15,44 +17,48 @@ class Node():
     def __init__(self,linear_scaling,angular_scaling,keyboard=False):
         self.linear_scaling = linear_scaling
         self.angular_scaling = angular_scaling
-        self.left_pub = None
+        self.left_pub = None 
         self.right_pub = None
+        self.left_pub_angle=None
+        self.right_pub_angle=None
         self.left_msg =None
         self.right_msg =None
+        self.left_msg_angle=None
+        self.right_msg_angle=None
         self.keyboard = keyboard
         self.Kp=1.8
         self.Ki=0.01
         self.Kd=5.55
-        self.SetLevel = 0.0
-        self.PTerm = 0.0
-        self.ITerm = 0.0
-        self.DTerm = 0.0
-        self.last_error = 0.0
-        self.windup_guard = 100.0
-        self.output = 0.0
+    #     self.SetLevel = 0.0
+    #     self.PTerm = 0.0
+    #     self.ITerm = 0.0
+    #     self.DTerm = 0.0
+    #     self.last_error = 0.0
+    #     self.windup_guard = 100.0
+    #     self.output = 0.0
         
-    def clear(self):
-        self.SetLevel = 0.0
-        self.PTerm = 0.0
-        self.ITerm = 0.0
-        self.DTerm = 0.0
-        self.last_error = 0.0
-        self.windup_guard = 2.2
-        self.output = 0.0
+    # def clear(self):
+    #     self.SetLevel = 0.0
+    #     self.PTerm = 0.0
+    #     self.ITerm = 0.0
+    #     self.DTerm = 0.0
+    #     self.last_error = 0.0
+    #     self.windup_guard = 2.2
+    #     self.output = 0.0
 
-    def update(self,feedback_value):
-        global SetLevel
-        error=SetLevel-(feedback_value)
-        self.PTerm = self.Kp * error
-        self.ITerm += error
-        if (self.ITerm < -self.windup_guard):
-            self.ITerm = -self.windup_guard
-        elif (self.ITerm > self.windup_guard):
-            self.ITerm = self.windup_guard
-        delta_error = error-self.last_error
-        self.DTerm = delta_error
-        self.last_error = error
-        self.output = self.PTerm + (self.Ki * self.ITerm) + (self.Kd * self.DTerm)
+    # def update(self,feedback_value):
+    #     global SetLevel
+    #     error=SetLevel-(feedback_value)
+    #     self.PTerm = self.Kp * error
+    #     self.ITerm += error
+    #     if (self.ITerm < -self.windup_guard):
+    #         self.ITerm = -self.windup_guard
+    #     elif (self.ITerm > self.windup_guard):
+    #         self.ITerm = self.windup_guard
+    #     delta_error = error-self.last_error
+    #     self.DTerm = delta_error
+    #     self.last_error = error
+    #     self.output = self.PTerm + (self.Ki * self.ITerm) + (self.Kd * self.DTerm)
 
 
     # def callback_gazebo_speed(self,data):
@@ -61,11 +67,11 @@ class Node():
     #      gazebo_speed=-1*data.twist[index].linear.x
              
     def callback(self,data):
-
+        
         self.left_msg.data = data.linear.x
-        self.right_msg.data = data.linear.x
-        self.left_msg_angle = data.angular.z
-        self.right_msg_angle = data.angular.z
+        self.right_msg .data= data.linear.x
+        self.left_msg_angle.data = data.angular.z
+        self.right_msg_angle.data = data.angular.z
         #global SetLevel
         #SetLevel=data.linear.x       
 
@@ -77,10 +83,10 @@ class Node():
         node.left_pub_angle.publish(node.left_msg_angle)
         node.right_pub_angle.publish(node.right_msg_angle)  
 
-        node.wamv1left_pub.publish(1.0)
-        node.wamv1right_pub.publish(1.0)
-        node.wamv1left_pub_angle.publish(0.1)
-        node.wamv1right_pub_angle.publish(0.1)         
+        # node.wamv1left_pub.publish(1.0)
+        # node.wamv1right_pub.publish(1.0)
+        # node.wamv1left_pub_angle.publish(0.1)
+        # node.wamv1right_pub_angle.publish(0.1)         
 
 
 if __name__ == '__main__':
@@ -102,11 +108,11 @@ if __name__ == '__main__':
     node.right_pub = rospy.Publisher("/wamv/thrusters/right_thrust_cmd",Float32,queue_size=10)
     node.left_pub_angle = rospy.Publisher('/wamv/thrusters/left_thrust_angle', Float32, queue_size=1)
     node.right_pub_angle = rospy.Publisher('/wamv/thrusters/right_thrust_angle', Float32, queue_size=1)
-    node.wamv1left_pub = rospy.Publisher("/wamv1/thrusters/left_thrust_cmd",Float32,queue_size=10)
-    node.wamv1right_pub = rospy.Publisher("/wamv1/thrusters/right_thrust_cmd",Float32,queue_size=10)
-    node.wamv1left_pub_angle = rospy.Publisher('/wamv1/thrusters/left_thrust_angle', Float32, queue_size=1)
-    node.wamv1right_pub_angle = rospy.Publisher('/wamv1/thrusters/right_thrust_angle', Float32, queue_size=1)
-    node.left_msg = Float32()
+    # node.wamv1left_pub = rospy.Publisher("/wamv1/thrusters/left_thrust_cmd",Float32,queue_size=10)
+    # node.wamv1right_pub = rospy.Publisher("/wamv1/thrusters/right_thrust_cmd",Float32,queue_size=10)
+    # node.wamv1left_pub_angle = rospy.Publisher('/wamv1/thrusters/left_thrust_angle', Float32, queue_size=1)
+    # node.wamv1right_pub_angle = rospy.Publisher('/wamv1/thrusters/right_thrust_angle', Float32, queue_size=1)
+    # node.left_msg = Float32()
     node.left_msg = Float32()
     node.right_msg = Float32()
     node.left_msg_angle = Float32()
@@ -119,7 +125,7 @@ if __name__ == '__main__':
     try:
         rate = rospy.Rate(100) # 10hz
         while not rospy.is_shutdown():
-            node.update(gazebo_speed)   
+            # node.update(gazebo_speed)   
             rate.sleep()
     except rospy.ROSInterruptException:
         pass

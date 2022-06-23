@@ -18,7 +18,7 @@
   <!-- Acoustic pinger position(s) -->
   <arg name="pinger_params" default="$(find vrx_gazebo)/config/pinger.yaml"/>
 
-  <!-- Initial USV location and attitude-->
+  <!-- Initial USV location and attitude  about  gazebo green origin-->
   <arg name="x" default="-172.28" />
   <arg name="y" default="217.273" />
   <!-- <arg name="x" default="0" />

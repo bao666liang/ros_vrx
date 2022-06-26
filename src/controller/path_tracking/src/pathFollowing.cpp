@@ -57,21 +57,11 @@ float Pid_Control(float LosAngle,float theta)
     }
     count++;
     //误差要取负号   
-    // float Angle  = -(0.03*Err+ 0.00001*ErrInt + 30*ErrRate);
-    float Angle  = -(0.05*Err + 0.000001*ErrInt );
+    float Angle  = -(0.03*Err+ 30*ErrRate);
+    //float Angle  = -(0.05*Err + 0.000001*ErrInt );
 
-      /*                         常用口诀
-            参数整定找最佳，从小到大顺序查
-            先是比例后积分，最后再把微分加
-            曲线振荡很频繁，比例度盘要放大
-            曲线漂浮绕大湾，比例度盘往小扳
-            曲线偏离回复慢，积分时间(Ti)往下降  系数为1/Ti
-            曲线波动周期长，积分时间再加长
-            曲线振荡频率快，先把微分降下来
-            动差大来波动慢。微分时间应加长
-            理想曲线两个波，前高后低4比1
-            一看二调多分析，调节质量不会低      
-    */
+      //  船舶 PD控制                    
+           
     return Angle;
 }
 
